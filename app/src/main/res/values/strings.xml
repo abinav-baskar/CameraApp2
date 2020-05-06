@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">CameraApp2</string>
+    <string name="oneButtonName">Manual Video Control</string>
+    <string name="twoButtonName">FFmpeg Trim Video</string>
+    <string name="threeButtonName">TBC</string>
+    <string name="manual_button_startCapture">Capture</string>
+    <string name="manual_button_flipCamera">FlipCam</string>
+    <string name="manual_button_stopCapture">Stop</string>
+    <string name="blank"></string>
+    <string name="deniedPermission">Not all permissions granted! :(</string>
+    <string name="tryAndGetPermissionAgain">Request</string>
+    <string name="button_goToAppend">FFmpeg Append Video</string>
+</resources>
