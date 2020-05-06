@@ -28,15 +28,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        System.out.println("Test_camera preview has been created");
-        DebugMethods.sendToast("Is this called sufficiently?", c);
+
     }
 
     public void surfaceCreated(SurfaceHolder holder) {
-        CharSequence text = "surface created!";
-        Toast toast = Toast.makeText(c, text, Toast.LENGTH_SHORT);
-        toast.show();
-
         ///////byub adding this
         CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_720P);
         Camera.Parameters parameters = mCamera.getParameters();
@@ -88,6 +83,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             Log.d(TAG, "Error starting camera preview: " + e.getMessage());
         }
     }
+
 
 
 }

@@ -21,9 +21,9 @@ public class SaveMedia {
         context.sendBroadcast(mediaScanIntent);
     }
 
-    public static Uri getOutputMediaFileUri(int type, Context c) {
-        File f = getOutputMediaFile(type, c);
-        return Uri.fromFile(getOutputMediaFile(type, c));
+    public static Uri getOutputMediaFileUri(File f, int type, Context c) {
+   //File f = getOutputMediaFile(type, c);
+        return Uri.fromFile(f);
     }
 
 

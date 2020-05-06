@@ -27,71 +27,45 @@ public class TrimVideo extends AppCompatActivity {
     FFmpeg ffmpeg;
     String[] commands;
     Callback activity;
-    static String filePath = null;
-    static String outputFilePath = null;
+
     public Context trimVideoContext = this;
     TextView onSuccessText = null;
     File mediaStorageDir = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trim_video);
-       // ffmpeg = FFmpeg.getInstance(this); //ok lets just make a video and hardcode the file path
-    //    loadFFMpegBinary(); ok this wasn't getting called it seems
-    createStorageDirectory();
-    File trimmedVid = new File(mediaStorageDir.getPath() + File.separator +
-            "panyangarra.mp4");
-
-       filePath = "/storage/emulated/0/Pictures/MyCameraApp/VID_20200416_162058.mp4";
-        //outputFilePath = "/storage/emulated/0/Pictures/MyCameraApp/VID_20200416_144839.mp4";
-        outputFilePath = trimmedVid.getAbsolutePath();
-
-        trimTheVideo(this);
-
-
-        onSuccessText = findViewById(R.id.errorMessage);
-        onSuccessText.setMovementMethod(new ScrollingMovementMethod());
-
-       // String[] complexCommand = {"-ss", "" + startMs / 1000, "-y", "-i", inputFileAbsolutePath, "-t", "" + (endMs - startMs) / 1000, "-s", "320x240", "-r", "15", "-vcodec", "mpeg4", "-b:v", "2097152", "-b:a", "48000", "-ac", "2", "-ar", "22050", outputFileAbsolutePath};
-
     }
 
-    public static void setFilePath(String path) {
-        filePath = path;
-    }
-    public void createStorageDirectory() {
+    public File createTempStorageDirectory() {
        mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "CameraApp2"); //the other one was myCameraApp, remember?
+                Environment.DIRECTORY_PICTURES), "CameraApp_Temp"); //the other one was myCameraApp, remember?
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
-                DebugMethods.sendToast("Not cannot make directory", this); //later we should make the thing to put it in gallery
+                DebugMethods.sendToast("No cannot make directory", this); //later we should make the thing to put it in gallery
+                return null;
             }
         }
+        return new File(mediaStorageDir.getPath() + File.separator + "tempVideo.mp4");
     }
 
-    public void trimTheVideo(Context c) {
+    public void trimTheVideo(String mInputFilePath, String mOutputFilePath, int startMs, int endMs, Context c) {
         loadFFMpegBinary(c);
-        int startMs = 0;
-        int endMs = 2100;
-        if(filePath != null) {
-           String[] complexCommand = { "-y", "-i", filePath,  "-ss",  ""+ startMs / 1000, "-t",  ""+ (endMs-startMs) / 1000, "-c", "copy", outputFilePath};
-           execFFmpegBinary(complexCommand);
+
+        if(mInputFilePath != null) {
+           String[] complexCommand = { "-y", "-i", mInputFilePath,  "-ss",  ""+ startMs / 1000, "-t",  ""+ (endMs-startMs) / 1000, "-c", "copy", mOutputFilePath};
+           execFFmpegBinary(complexCommand, c);
         }
         else {
             DebugMethods.sendToast("File path is null, ", c);
         }
     }
 
-
-
     private void loadFFMpegBinary(Context c) {
             if (ffmpeg == null) {
                 ffmpeg = FFmpeg.getInstance(c);
             }
-
             try {
                 ffmpeg.loadBinary(new LoadBinaryResponseHandler() {
                 @Override
@@ -102,49 +76,64 @@ public class TrimVideo extends AppCompatActivity {
                 }
         }
 
-    private void execFFmpegBinary(final String[] command) {
+    private  void execFFmpegBinary(final String[] command, final Context c) {
+      //  synchronized (this) {
+            try {
+                ffmpeg.execute(command, new ExecuteBinaryResponseHandler() {
+                            @Override
+                            public void onFailure(String s) {
+                                ManualVideoActivity.setFfmpegDone(true);
+                                DebugMethods.sendToast("TrimVideo: Finished with failure", c);
 
-        try {
-            ffmpeg.execute(command, new ExecuteBinaryResponseHandler() {
-                        @Override
-                        public void onFailure(String s) {
-                         //   DebugMethods.sendToast("Failed with output" + s, TrimVideo.this);
-
+                            /*DebugMethods.sendToast("Failed with output" + s, TrimVideo.this);
                             CharSequence mText = "Failure with output\n" + s;
-                            onSuccessText.setText(mText);
-                        }
+                            onSuccessText.setText(mText);*/
+                            }
 
-                        @Override
-                        public void onSuccess(String s) {
-                         //   DebugMethods.sendToast("Success with output" + s, TrimVideo.this);
-                            onSuccessText = findViewById(R.id.errorMessage);
+                            @Override
+                            public void onSuccess(String s) {
+                                DebugMethods.sendToast("TrimVideo: Finished with success", c);
+                                System.out.println("TrimVideo finished with sucess");
+                                ManualVideoActivity.setFfmpegDone(true);
+                             //   this.notify();
+
+                           /* onSuccessText = findViewById(R.id.errorMessage);
                             CharSequence mText = "Success with output\n" + s;
-                            onSuccessText.setText(mText);
-                            //Stuff here
-                        }
+                            onSuccessText.setText(mText);*/
+                            }
 
-                        @Override
-                        public void onProgress(String s) {
-                     //       DebugMethods.sendToast("Progress", TrimVideo.this);
-                        }
+                            @Override
+                            public void onProgress(String s) {
+                                //       DebugMethods.sendToast("Progress", TrimVideo.this);
+                            }
 
-                        @Override
-                        public void onStart() {
-                            DebugMethods.sendToast("Started", TrimVideo.this);
-                        }
+                            @Override
+                            public void onStart() {
+                                // DebugMethods.sendToast("Started", c);
+                            }
 
-                        @Override
-                        public void onFinish() {
-                            DebugMethods.sendToast("Finished", TrimVideo.this);
+                            @Override
+                            public void onFinish() {
+                                //   DebugMethods.sendToast("TrimVideo: Finished", c);
 
+                            }
                         }
-                    }
-            );
-        } catch (FFmpegCommandAlreadyRunningException e) {
-            DebugMethods.sendToast("Ffmpegcommandalreadyrunning", this);
+                );
+            } catch (FFmpegCommandAlreadyRunningException e) {
+                DebugMethods.sendToast("Ffmpegcommandalreadyrunning", this);
+            }
+      //  }
     }
-}
 
+    public void trimVideoTest() {
+        File trimmedVid = new File(mediaStorageDir.getPath() + File.separator + "panyangarra.mp4");
+        String test_inputFilePath = "/storage/emulated/0/Pictures/MyCameraApp/VID_20200416_162058.mp4";
+        String test_outputFilePath = trimmedVid.getAbsolutePath();
+        trimTheVideo(test_inputFilePath, test_outputFilePath,0,2100,this);
+
+        onSuccessText = findViewById(R.id.errorMessage);
+        onSuccessText.setMovementMethod(new ScrollingMovementMethod());
+    }
 
 }
 
